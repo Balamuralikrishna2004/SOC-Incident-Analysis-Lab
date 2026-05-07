@@ -37,4 +37,4 @@ index=main EventCode=5156
 | bin _time span=1m
 | stats dc(Destination_Port) as ports by Source_IP, _time
 | where ports > 10
-.....,............
+
