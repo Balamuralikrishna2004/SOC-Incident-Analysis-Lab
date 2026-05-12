@@ -95,7 +95,7 @@ Open the following folders:
 etc → system → local
 
 Full path:
-**'C:\Program Files\SplunkUniversalForwarder\etc\system\local'**
+C:\Program Files\SplunkUniversalForwarder\etc\system\local
 
 ->Step 3: Create inputs.conf
 Inside the local folder:
@@ -107,7 +107,7 @@ inputs.conf
 ->Step 4: Add Configuration
 
 Open inputs.conf in Notepad and paste the following configuration:
-**'
+```ini
 [WinEventLog://Application]
 index = endpoint
 disabled = false
@@ -124,7 +124,7 @@ disabled = false
 index = endpoint
 disabled = false
 renderXml = true
-'**
+```
 
 ->Step 5: Restart Splunk Universal Forwarder
 
