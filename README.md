@@ -87,14 +87,15 @@ net start SplunkForwarder
 ->Step 1: Open Splunk Universal Forwarder Directory
 
 Go to:
-C:\Program Files\SplunkUniversalForwarder
+**'C:\Program Files\SplunkUniversalForwarder'**
+
 ->Step 2: Navigate to Local Configuration Folder
 
 Open the following folders:
 etc → system → local
 
 Full path:
-C:\Program Files\SplunkUniversalForwarder\etc\system\local
+**'C:\Program Files\SplunkUniversalForwarder\etc\system\local'**
 
 ->Step 3: Create inputs.conf
 Inside the local folder:
@@ -102,10 +103,11 @@ Right-click
 Create a new text file
 Rename it as:
 inputs.conf
+
 ->Step 4: Add Configuration
 
 Open inputs.conf in Notepad and paste the following configuration:
-
+**'
 [WinEventLog://Application]
 index = endpoint
 disabled = false
@@ -122,19 +124,21 @@ disabled = false
 index = endpoint
 disabled = false
 renderXml = true
+'**
 
 ->Step 5: Restart Splunk Universal Forwarder
 
 Open Command Prompt as Administrator and run:
-
+```cmd
 net stop SplunkForwarder
 net start SplunkForwarder
+```
 
 ->Step 6: Verify Logs in Splunk Enterprise
 
 Search the following in Splunk Enterprise:
 
-index=endpoint
+**'index=endpoint'**
 
 You should now see:
 
