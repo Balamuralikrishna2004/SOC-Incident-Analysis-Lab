@@ -137,9 +137,9 @@ net start SplunkForwarder
 ->Step 6: Verify Logs in Splunk Enterprise
 
 Search the following in Splunk Enterprise:
-
-**'index=endpoint'**
-
+```init
+index=endpoint
+```
 You should now see:
 
 Application logs
