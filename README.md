@@ -22,41 +22,30 @@
 - **Oracle VirtualBox** (latest version) with Extension Pack
 - ISO images:
   - [Kali Linux](https://www.kali.org/get-kali/)
-  - [Windows 10](https://www.microsoft.com/software-download/windows10ISO) (eval version works)
-  - [Ubuntu Server 20.04](https://releases.ubuntu.com/20.04/)
-- [Splunk Enterprise & Universal Forwarder](https://dev.splunk.com/enterprise) — free dev license
+  - [Windows 10](https://www.microsoft.com/software-download/windows10ISO)
+  -[splunkUniversal Forwarder](https://www.splunk.com/en_us/download/universal-forwarder.html)
 
----
 
-## Setup Instructions
+
 
 ### 1. Virtual Machine Configuration
 
-| VM | vCPUs | RAM | Network | IP |
+| VM | vCPUs | RAM | Network 
 |----|-------|-----|---------|-----|
-| Kali Linux | 2 | 2 GB | NAT Network | 10.0.2.10 |
-| Windows 10 | 2 | 4 GB | NAT Network | 10.0.2.15 |
-| Splunk Indexer | 2 | 4 GB | NAT Network | 10.0.2.5 |
+| Kali Linux | 2 | 2 GB | NAT Network 
+| Windows 10 | 2 | 4 GB | NAT Network 
 
-Create a **NAT Network** in VirtualBox (e.g., `NatNetwork`) so all VMs can communicate. After installing each OS, verify connectivity with `ping 10.0.2.5` from Windows.
+Create a **NAT Network** in VirtualBox so all VMs can communicate. 
+After installing each OS, verify connectivity with `ping 10.0.2.5` from Windows.
 
----
 
-### 2. Install Splunk Enterprise (Ubuntu)
+### 2. Install Splunk Enterprise (windows 10 VM machine)
 
-```bash
-wget -O splunk.tgz 'https://www.splunk.com/page/download_track?file=...'
-tar -xzvf splunk.tgz
-cd splunk/bin
-./splunk start --accept-license
-
-# Enable Splunk to receive data on port 9997
-./splunk enable listen 9997 -auth admin:changeme
-```
+-[splunk Enterprise](https://www.splunk.com/en_us/products/splunk-enterprise.html)
 
 Access the Splunk web interface at **http://10.0.2.5:8000**
 
----
+
 
 ### 3. Install Splunk Universal Forwarder (Windows 10)
 
@@ -91,8 +80,69 @@ Restart the forwarder service:
 net stop SplunkForwarder
 net start SplunkForwarder
 ```
+      (OR)
 
----
+## 3. Forward Logs to Splunk Enterprise
+
+->Step 1: Open Splunk Universal Forwarder Directory
+
+Go to:
+C:\Program Files\SplunkUniversalForwarder
+->Step 2: Navigate to Local Configuration Folder
+
+Open the following folders:
+etc → system → local
+
+Full path:
+C:\Program Files\SplunkUniversalForwarder\etc\system\local
+
+->Step 3: Create inputs.conf
+Inside the local folder:
+Right-click
+Create a new text file
+Rename it as:
+inputs.conf
+->Step 4: Add Configuration
+
+Open inputs.conf in Notepad and paste the following configuration:
+
+[WinEventLog://Application]
+index = endpoint
+disabled = false
+
+[WinEventLog://Security]
+index = endpoint
+disabled = false
+
+[WinEventLog://System]
+index = endpoint
+disabled = false
+
+[WinEventLog://Microsoft-Windows-Sysmon/Operational]
+index = endpoint
+disabled = false
+renderXml = true
+
+->Step 5: Restart Splunk Universal Forwarder
+
+Open Command Prompt as Administrator and run:
+
+net stop SplunkForwarder
+net start SplunkForwarder
+
+->Step 6: Verify Logs in Splunk Enterprise
+
+Search the following in Splunk Enterprise:
+
+index=endpoint
+
+You should now see:
+
+Application logs
+Security logs
+System logs
+Sysmon logs
+
 
 ### 4. Install Sysmon (Windows 10)
 
@@ -106,7 +156,8 @@ sysmon64 -accepteula -i sysmonconfig.xml
 
 Sysmon events will appear under `Applications and Services Logs → Microsoft → Windows → Sysmon → Operational` and are automatically picked up by the Universal Forwarder.
 
----
+
+
 
 ## Attacks Simulated & MITRE ATT&CK Mapping
 
