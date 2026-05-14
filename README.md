@@ -1,9 +1,7 @@
----
-
 ## Technologies Used
 
 | Tool | Purpose |
-|------|---------|
+
 | Oracle VirtualBox | Hypervisor for all VMs |
 | Kali Linux | Attacker machine (pre-installed tools) |
 | Windows 10 | Target / victim machine |
@@ -13,8 +11,6 @@
 | Nmap | Network discovery & port scanning |
 | Hydra | Password brute-forcing (RDP, SSH, etc.) |
 | Metasploit | Reverse shell payload generation & exploitation |
-
----
 
 ## Prerequisites
 
