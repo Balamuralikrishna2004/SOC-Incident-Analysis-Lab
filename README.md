@@ -1,16 +1,16 @@
 ## Technologies Used
 
 | Tool | Purpose |
-
+|------|---------|
 | Oracle VirtualBox | Hypervisor for all VMs |
 | Kali Linux | Attacker machine (pre-installed tools) |
-| Windows 10 | Target / victim machine |
+| Windows 2022 | Target / victim machine |
 | Splunk Enterprise | SIEM for log ingestion, searching, and alerting |
 | Splunk Universal Forwarder | Lightweight agent on Windows to forward logs |
 | Sysmon | Advanced endpoint logging (process, network, file changes) |
 | Nmap | Network discovery & port scanning |
 | Hydra | Password brute-forcing (RDP, SSH, etc.) |
-| Metasploit | Reverse shell payload generation & exploitation |
+
 
 ## Prerequisites
 
@@ -18,28 +18,40 @@
 - **Oracle VirtualBox** (latest version) with Extension Pack
 - ISO images:
   - [Kali Linux](https://www.kali.org/get-kali/)
-  - [Windows 10](https://www.microsoft.com/software-download/windows10ISO)
-  -[splunkUniversal Forwarder](https://www.splunk.com/en_us/download/universal-forwarder.html)
-
-
+  - [Windows 10](https://www.microsoft.com/en-us/evalcenter/download-windows-server-2022)
+  - [splunkUniversal Forwarder](https://www.splunk.com/en_us/download/universal-forwarder.html)
 
 
 ### 1. Virtual Machine Configuration
 
-| VM | vCPUs | RAM | Network 
-|----|-------|-----|---------|-----|
-| Kali Linux | 2 | 2 GB | NAT Network 
-| Windows 10 | 2 | 4 GB | NAT Network 
+| VM | vCPUs | RAM | Storage | Network |
+|----|-------|-----|---------|---------|
+| Kali Linux | 2 | 2 GB | 20 GB | NAT Network |
+| Windows 10 | 2 | 4 GB | 40 GB | NAT Network |
 
 Create a **NAT Network** in VirtualBox so all VMs can communicate. 
-After installing each OS, verify connectivity with `ping 10.0.2.5` from Windows.
+
+After installing each OS,
+FROM kali linux
+```bash
+ip a
+```
+notedown the ip address of kali linux
+
+FROM Windows 2022
+```cmd
+ipconfig
+```
+notedown the ip address of windows 2022
+
+verify connectivity with `ping 10.0.*.*` from Windows.
 
 
 ### 2. Install Splunk Enterprise (windows 10 VM machine)
 
 -[splunk Enterprise](https://www.splunk.com/en_us/products/splunk-enterprise.html)
 
-Access the Splunk web interface at **http://10.0.2.5:8000**
+Access the Splunk web interface at **http://10.0.*.*:8000**
 
 
 
