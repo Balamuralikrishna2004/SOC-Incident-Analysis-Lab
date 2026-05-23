@@ -209,7 +209,6 @@ Navigate to **Dashboards → Create New Dashboard** in Splunk and add the follow
 | 3 | `index=* (4625 OR 4624) LogonType=10 \| timechart count span=1m by EventCode` | Line Chart |
 | 4 | `index=* LogonType=10 (4625 OR 4624) \| eval result=if(EventCode=4624, "Success", "Failure") \| stats count by result` | Pie Chart |
 | 5 | `index=* (4625 OR 4624) LogonType=10 \| table _time, Source_Network_Address, TargetUserName, EventCode \| head 20` | Table |
-| 6 | `index=* sourcetype=pfSense action=block dst_port=3389 \| timechart count by src_ip` | Area Chart |
 
 ## Future Improvements
 
