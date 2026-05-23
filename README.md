@@ -200,36 +200,33 @@ index=endpoint EventCode=4625 Logon_Type=10
 
 ## Investigation Dashboard
 
-Navigate to **Dashboards → Create New Dashboard** in Splunk and add one panel per detection query. Suggested layout:
+Navigate to **Dashboards → Create New Dashboard** in Splunk and add the following panels:
 
-- **Port Scans (T1046)** — bar chart by Source IP
-- **Failed Logins (T1110)** — timeline of failed RDP attempts
-- **Suspicious Outbound Connections (T1573)** — table of process + destination
-
----
+| # | Query | Visualization |
+|---|-------|---------------|
+| 1 | `index=* EventCode=4625 LogonType=10 \| timechart count by Source_Network_Address` | Column Chart |
+| 2 | `index=* EventCode=4625 \| stats count by Source_Network_Address \| sort - count` | Bar Chart |
+| 3 | `index=* (4625 OR 4624) LogonType=10 \| timechart count span=1m by EventCode` | Line Chart |
+| 4 | `index=* LogonType=10 (4625 OR 4624) \| eval result=if(EventCode=4624, "Success", "Failure") \| stats count by result` | Pie Chart |
+| 5 | `index=* (4625 OR 4624) LogonType=10 \| table _time, Source_Network_Address, TargetUserName, EventCode \| head 20` | Table |
+| 6 | `index=* sourcetype=pfSense action=block dst_port=3389 \| timechart count by src_ip` | Area Chart |
 
 ## Future Improvements
 
-- Add **Zeek** (formerly Bro) for network traffic monitoring
-- Integrate **TheHive** for structured case management
-- Generate attack emulations with **Caldera** or **Atomic Red Team**
-- Configure Splunk alerts to push notifications to **Slack** or **Microsoft Teams**
-
----
+- Add **Zeek** for network monitoring
+- Add **TheHive** for case management
+- Add **Caldera** for attack emulation
+- Set up **Slack alerts** from Splunk
 
 ## References
 
 - [Splunk Search Reference](https://docs.splunk.com/Documentation/Splunk/latest/SearchReference)
 - [Sysmon Documentation](https://learn.microsoft.com/en-us/sysinternals/downloads/sysmon)
 - [MITRE ATT&CK Framework](https://attack.mitre.org/)
-- [Nmap Network Scanning](https://nmap.org/book/)
-- [SwiftOnSecurity Sysmon Config](https://github.com/SwiftOnSecurity/sysmon-config)
-
----
 
 ## License
 
-This project is for **educational and research purposes only**. Use it to learn detection and response techniques in a safe, isolated lab environment.
+This project is for **educational and research purposes only**.
 
 ---
 
