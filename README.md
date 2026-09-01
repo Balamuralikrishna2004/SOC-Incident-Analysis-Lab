@@ -229,4 +229,4 @@ This project is for **educational and research purposes only**.
 
 ---
 
-*Happy Hunting! 🔍*
+*keep updating yourself*
